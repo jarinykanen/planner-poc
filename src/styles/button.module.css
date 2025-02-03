@@ -1,0 +1,49 @@
+.root {
+  font-weight: 500;
+  background-color: var(--mantine-primary-color-8);
+
+  &[data-variant=outline] {
+    background-color: var(--mantine-white);
+    color: var(--mantine-primary-color-9);
+    border: 1px solid var(--mantine-primary-color-9);
+    @mixin hover {
+      background-color: var(--mantine-primary-color-0);
+    }
+  }
+  /* The following styles will be applied only when button is disabled */
+  &[data-disabled] {
+    /* You can use Mantine PostCSS mixins inside data attributes */
+    @mixin light {
+      border: 1px solid var(--mantine-primary-color-1);
+      background-color: var(--mantine-primary-color-1);
+      color: var(--mantine-color-white);
+    }
+
+    @mixin dark {
+      border: 1px solid var(--mantine-color-dark-4);
+    }
+
+    &[data-variant=outline] {
+      background-color: var(--mantine-color-gray-0);
+      color: var(--mantine-color-gray-6);
+      border: 1px solid var(--mantine-color-gray-4);
+    }
+  }
+
+  &[data-variant=light] {
+    background-color: var(--mantine-primary-color-0);
+    color: var(--mantine-primary-color-9);
+    @mixin hover {
+      background-color: var(--mantine-primary-color-1);
+    }
+  }
+
+  &[data-variant='danger'] {
+    background-color: var(--mantine-color-red-9);
+    color: var(--mantine-color-red-0);
+  }
+
+  @mixin hover {
+    background-color: var(--mantine-primary-color-9);
+  }
+}

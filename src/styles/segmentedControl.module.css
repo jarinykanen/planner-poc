@@ -1,0 +1,19 @@
+.root {
+  background-color: var(--mantine-primary-color-9);
+  border-radius: 0;
+}
+
+.label {
+  font-weight: 600;
+  color: var(--mantine-primary-color-0);
+  &:hover {
+    color: var(--mantine-color-white);
+    text-decoration: underline;
+    &[data-active] {
+      text-decoration: none;
+    }
+  }
+  &[data-active] {
+    color: var(--mantine-primary-color-9);
+  }
+}

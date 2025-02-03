@@ -1,0 +1,19 @@
+.code, code {
+  background-color: #6d98f6;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9em;
+  color: white
+}
+
+.mantine-Table-tr, .mantine-Table-td {
+  display: flex;
+  flex: 1;
+}
+
+.mantine-Table-td, .mantine-Table-th {
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
