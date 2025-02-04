@@ -1,21 +1,17 @@
-import { AppShell, Burger, Group } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { createRootRoute, Link, Outlet } from '@tanstack/react-router';
-import { HTML5Backend } from 'react-dnd-html5-backend'
-import { DndProvider } from 'react-dnd'
+import { AppShell } from '@mantine/core';
+import { createRootRoute, Outlet } from '@tanstack/react-router';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import TopBar from '../components/topbar';
 
 const RootLayout = () => {
-  const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
-  const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
-
   return (
     <DndProvider backend={HTML5Backend}>
       <AppShell
         header={{ height: 60 }}
         padding="md"
       >
-        <AppShell.Header>
-        </AppShell.Header>
+        <TopBar />
         <AppShell.Main>
           <Outlet />
         </AppShell.Main>

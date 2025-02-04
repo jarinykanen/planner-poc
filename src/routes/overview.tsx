@@ -1,7 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Container } from '@mantine/core';
+import { createFileRoute } from '@tanstack/react-router';
 import ChartView from '../components/chart';
-import { demoProjects } from '../types';
-import { Container, Flex } from '@mantine/core';
+import { demoPeople, demoPhases, demoProjects, demoProjectTimes } from '../types';
 
 export const Route = createFileRoute('/overview')({
   component: RouteComponent,
@@ -12,6 +12,9 @@ function RouteComponent() {
     <Container fluid p={0} flex={1} w="100%">
       <ChartView
         projects={demoProjects}
+        people={demoPeople}
+        projectTimes={demoProjectTimes}
+        phases={demoPhases}
       />
     </Container>
   );
