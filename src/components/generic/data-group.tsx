@@ -1,4 +1,5 @@
 import {
+  ColorPicker,
   type ComboboxItem,
   Group,
   MultiSelect,
@@ -36,6 +37,10 @@ interface Props {
   switchProps?: {
     switchValue?: boolean;
   };
+  colorPickerProps?: {
+    colorValue?: string;
+    onColorChange?: (value: string) => void;
+  };
   column?: boolean;
   /**
    * Size of the text
@@ -45,7 +50,7 @@ interface Props {
   placeholder?: string;
   unit?: string;
   edit?: boolean;
-  inputType?: "text" | "number" | "date" | "select" | "multiSelect" | "switch" | "textarea" | "time";
+  inputType?: "text" | "number" | "date" | "select" | "multiSelect" | "switch" | "textarea" | "time" | "color";
   disabled?: boolean;
   tooltip?: string;
   onChange?: (value: string | number | Date | boolean) => void;
@@ -65,6 +70,7 @@ const DataGroup = ({
   selectProps,
   multiSelectProps,
   switchProps,
+  colorPickerProps,
   disabled,
   tooltip,
   onChange,
@@ -72,6 +78,7 @@ const DataGroup = ({
   const { selectOptions, selectValue } = selectProps || {};
   const { switchValue } = switchProps || {};
   const { multiSelectValues, multiSelectOptions, onMultiSelectChange } = multiSelectProps || {};
+  const { colorValue, onColorChange } = colorPickerProps || {};
 
   const renderInput = () => {
     switch (inputType) {
@@ -154,6 +161,15 @@ const DataGroup = ({
             style={{ width: "100%", height: "36px", padding: 0 }}
             disabled={disabled}
             onChange={(value) => onChange?.(value.currentTarget.checked)}
+          />
+        );
+      case "color":
+        return (
+          <ColorPicker
+            format="hex"
+            swatches={['#2e2e2e', '#868e96', '#fa5252', '#e64980', '#be4bdb', '#7950f2', '#4c6ef5', '#228be6', '#15aabf', '#12b886', '#40c057', '#82c91e', '#fab005', '#fd7e14']}
+            value={colorValue}
+            onChange={(value) => onColorChange?.(value)}
           />
         );
       default:

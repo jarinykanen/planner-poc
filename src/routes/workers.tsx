@@ -76,6 +76,16 @@ function RouteComponent() {
           setPendingWorker({ ...pendingWorker, name: value as string })
         }
       />
+      <DataGroup
+        edit
+        column
+        title="Väri"
+        inputType="color"
+        colorPickerProps={{
+          colorValue: pendingWorker?.color,
+          onColorChange: (value) => pendingWorker && setPendingWorker({ ...pendingWorker, color: value })
+        }}
+      />
     </Stack>
   )
 

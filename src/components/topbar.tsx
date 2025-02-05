@@ -33,7 +33,7 @@ const TopBar = () => {
             <Tabs.List h="100%">
               <Tabs.Tab value={`/overview`}>Overview</Tabs.Tab>
               <Tabs.Tab value={`/projects`}>Projects</Tabs.Tab>
-              <Tabs.Tab value={`/people`}>People</Tabs.Tab>
+              <Tabs.Tab value={`/workers`}>Workers</Tabs.Tab>
             </Tabs.List>
           </Tabs>
         </Group>

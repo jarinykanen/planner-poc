@@ -1,4 +1,4 @@
-import { Button, ComboboxItem, Container, Group, Modal, Skeleton, Stack, Title } from "@mantine/core";
+import { Box, Button, ComboboxItem, Container, Group, Modal, ScrollArea, Skeleton, Stack, Title } from "@mantine/core";
 import dayjs from "dayjs";
 import dayjsLocale from "dayjs/locale/fi";
 import { useSetAtom } from "jotai";
@@ -38,6 +38,7 @@ interface Props {
 
 const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   const setProjectTimes = useSetAtom(projectTimesAtom);
+  const [mounted, setMounted] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
   const [modalOpened, setModalOpened] = useState(false);
   const [pendingProjectTime, setPendingProjectTime] = useState<ProjectTime>();
@@ -51,6 +52,14 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   // useEffect(() => {
   //   setProjectTimes([]);
   // }, []);
+
+  useEffect(() => {
+    if (schedulerData) {
+      schedulerData.setResources(createResources());
+      schedulerData.setEvents(createEvents());
+      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+    }
+  }, [parentRef.current]);
 
   const createResources = useCallback(() => {
     const resources: Resource[] = projects.map((project) => {
@@ -85,7 +94,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
         end: dayjs(projectTime.end).format("YYYY.MM.DD HH:mm:ss"),
         resourceId: projectTime.projectId,
         title: projectTime.title || "",
-        bgColor: `#${projectTime.bgColor}`
+        bgColor: projectTime.bgColor
       }
     });
 
@@ -93,23 +102,25 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   }, [projectTimes]);
 
   useEffect(() => {
-    if (schedulerData) {
-      schedulerData.setEvents(createEvents());
-      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
-    }
-  }, [projectTimes, createEvents]);
-
-  useEffect(() => {
     schedulerData = new SchedulerData(dayjs().format("YYYY.MM.DD"), ViewType.Month);
     schedulerData.config.dragAndDropEnabled = true;
     schedulerData.config.responsiveByParent = true;
     schedulerData.setSchedulerLocale(dayjsLocale);
     schedulerData.setCalendarPopoverLocale("fi_FI");
-    schedulerData.config.dayResourceTableWidth = 160;
+    schedulerData.config.dayResourceTableWidth = 300;
+    schedulerData.config.weekResourceTableWidth = 300;
     schedulerData.config.monthResourceTableWidth = 300;
+    schedulerData.config.quarterResourceTableWidth = 300;
+    schedulerData.config.yearResourceTableWidth = 300;
+    schedulerData.config.schedulerContentHeight = 800;
+    schedulerData.config.schedulerMaxHeight = 800;
     schedulerData.setResources(createResources());
     schedulerData.setEvents(createEvents());
     dispatch({ type: 'INITIALIZE', payload: schedulerData });
+
+    setTimeout(() => {
+      setMounted(true);
+    }, 1000);
   }, [createEvents, createResources])
 
   const onMoveEvent = (schedulerData: SchedulerData<EventItem>, event: EventItem, slotId: string, slotName: string, start: string, end: string) => {
@@ -175,14 +186,10 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   };
 
   const onToggleExpand = (_: SchedulerData<EventItem>, slotId: string) => {
-    console.log("onToggleExpand", slotId, schedulerData.getSlots());
     const found = schedulerData.getSlots().find((slot) => slot.id === slotId);
-    console.log("found", found);
     schedulerData.toggleExpandStatus(slotId);
     schedulerData.setEvents(createEvents());
   };
-
-  if (!schedulerData || !state.showScheduler) return <Skeleton height={500} />;
 
   const onCloseModal = () => {
     setModalOpened(false);
@@ -253,8 +260,10 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     />
   );
 
-  return (
-    <Container ref={parentRef} fluid p={0} flex={1} w="100%">
+  const renderContent = () => {
+    if (!schedulerData || !state.showScheduler || !parentRef.current || !mounted) return <Skeleton height={600} />;
+
+    return (
       <Scheduler
         parentRef={parentRef}
         moveEvent={onMoveEvent}
@@ -269,6 +278,14 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
         toggleExpandFunc={onToggleExpand}
         eventItemPopoverTemplateResolver={renderPopOver}
       />
+    );
+  }
+
+  return (
+    <Container flex={1} maw="100%" mah="100%" style={{ overflow: "hidden" }}>
+      <Box ref={parentRef}>
+        {renderContent()}
+      </Box>
       {renderModal("Lisää työaika")}
     </Container>
   );

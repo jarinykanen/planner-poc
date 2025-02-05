@@ -33,49 +33,35 @@ export interface Phase {
   name: string;
 }
 
+/**
+ * Valmistelevat työt
+ * Elementtityö
+ * Pystytys
+ * Listotus (sisäpuoli)
+ * Ovien asennus ja listotus
+ * Läpiviennit ja IV-varustelu
+ * Sähkövarustelu ja johdotus
+ * Sähkömittaus
+ * Lisävarustelu ja kalustus
+ * Siivous
+ * Laatutarkastukset
+ * Korjaukset
+ * Suojaus ja kuormaus
+ * Kuljetus ja asennus
+ */
 export const demoPhases: Phase[] = [
-  {
-    id: "1",
-    name: "Elementtien valmistus",
-  },
-  {
-    id: "2",
-    name: "Pystytys ja listoitus",
-  },
-  {
-    id: "3",
-    name: "IV-varustelu",
-  },
-  {
-    id: "4",
-    name: "Sähkövarustelu",
-  },
-  {
-    id: "5",
-    name: "Lisävarustelu",
-  },
-  {
-    id: "6",
-    name: "Kalustus",
-  },
-  {
-    id: "7",
-    name: "Siivous",
-  },
-  {
-    id: "8",
-    name: "Sähkömittaus",
-  },
-  {
-    id: "9",
-    name: "Laatutarkastukset",
-  },
-  {
-    id: "10",
-    name: "Suojaus ja kuormaus",
-  },
-  {
-    id: "11",
-    name: "Kuljetus ja asennus",
-  },
+  { id: '1', name: 'Valmistelevat työt' },
+  { id: '2', name: 'Elementtityö' },
+  { id: '3', name: 'Pystytys' },
+  { id: '4', name: 'Listotus (sisäpuoli)' },
+  { id: '5', name: 'Ovien asennus ja listotus' },
+  { id: '6', name: 'Läpiviennit ja IV-varustelu' },
+  { id: '7', name: 'Sähkövarustelu ja johdotus' },
+  { id: '8', name: 'Sähkömittaus' },
+  { id: '9', name: 'Lisävarustelu ja kalustus' },
+  { id: '10', name: 'Siivous' },
+  { id: '11', name: 'Laatutarkastukset' },
+  { id: '12', name: 'Korjaukset' },
+  { id: '13', name: 'Suojaus ja kuormaus' },
+  { id: '14', name: 'Kuljetus ja asennus' }
 ];
