@@ -1,29 +1,29 @@
-import { Button, MantineProvider, SegmentedControl, createTheme } from "@mantine/core";
 import type { MantineColorsTuple, MantineTheme } from "@mantine/core";
+import { Button, MantineProvider, SegmentedControl, createTheme } from "@mantine/core";
 import "@mantine/core/styles.css";
-import "./styles/global.css";
 import "@mantine/dates/styles.css";
-import "@mantine/notifications/styles.css";
 import { Notifications } from "@mantine/notifications";
+import "@mantine/notifications/styles.css";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import buttonClasses from "./styles/button.module.css";
-import segmentedControlClasses from "./styles/segmentedControl.module.css";
 import { routeTree } from "./routeTree.gen";
+import buttonClasses from "./styles/button.module.css";
+import "./styles/global.css";
+import segmentedControlClasses from "./styles/segmentedControl.module.css";
 
 const plannerPrimary: MantineColorsTuple = [
-  "#ebf1ff",
-  "#d2dffa",
-  "#a1bdf7",
-  "#6d98f6",
-  "#4679f5",
-  "#3166f6",
-  "#275cf7",
-  "#1d4cdc",
-  "#1444c5",
-  "#003aad",
-];
+  "#fff3e3",
+  "#ffe6ce",
+  "#facca0",
+  "#f6b06e",
+  "#f29843",
+  "#f18928",
+  "#f08118",
+  "#d66e0a",
+  "#bf6103",
+  "#a75200"
+]
 
 const theme = createTheme({
   primaryColor: "planner-primary",
@@ -153,6 +153,6 @@ if (!rootElement.innerHTML) {
         <Notifications />
         <RouterProvider router={router} />
       </MantineProvider>
-    </StrictMode>,
+    </StrictMode>
   );
 }

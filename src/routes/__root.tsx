@@ -1,12 +1,13 @@
 import { AppShell } from '@mantine/core';
 import { createRootRoute, Outlet } from '@tanstack/react-router';
+import TopBar from '../components/topbar';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import TopBar from '../components/topbar';
 
 const RootLayout = () => {
+
   return (
-    <DndProvider backend={HTML5Backend}>
+    <DndProvider backend={HTML5Backend} key={Math.random()}>
       <AppShell
         header={{ height: 60 }}
         padding="md"
@@ -17,7 +18,6 @@ const RootLayout = () => {
         </AppShell.Main>
       </AppShell>
     </DndProvider>
-
   );
 }
 

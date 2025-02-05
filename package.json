@@ -17,15 +17,20 @@
     "@tanstack/react-router": "^1.99.0",
     "@tanstack/router-devtools": "^1.99.0",
     "dayjs": "^1.11.13",
+    "jotai": "^2.11.3",
+    "lucide-react": "^0.474.0",
+    "luxon": "^3.5.0",
     "react": "^18.3.1",
     "react-big-schedule": "^4.4.5",
-    "react-dnd": "^16.0.1",
-    "react-dnd-html5-backend": "^16.0.1",
-    "react-dom": "^18.3.1"
+    "react-dnd": "^14.0.5",
+    "react-dnd-html5-backend": "^14.1.0",
+    "react-dom": "^18.3.1",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@tanstack/router-plugin": "^1.99.3",
+    "@types/luxon": "^3.4.2",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
