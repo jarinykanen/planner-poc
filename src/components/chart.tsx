@@ -2,11 +2,12 @@ import { Box, Button, ComboboxItem, Container, Group, Modal, Skeleton, Stack, Ti
 import dayjs from "dayjs";
 import dayjsLocale from "dayjs/locale/fi";
 import { useSetAtom } from "jotai";
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { EventItem, Resource, Scheduler, SchedulerData, View, ViewType } from "react-big-schedule";
 import "react-big-schedule/dist/css/style.css";
 import { v4 as uuid } from "uuid";
 import { projectTimesAtom } from "../atoms/project-times";
+import { projectsAtom } from "../atoms/projects";
 import { Phase, Project, ProjectTime, Worker } from "../types";
 import ChartPopOver from "./chart-pop-over";
 import DataGroup from "./generic/data-group";
@@ -39,6 +40,7 @@ interface Props {
 
 const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   const setProjectTimes = useSetAtom(projectTimesAtom);
+  const setProjects = useSetAtom(projectsAtom);
   const [mounted, setMounted] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
   const [modalOpened, setModalOpened] = useState(false);
@@ -46,27 +48,23 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
 
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const workerOptions: ComboboxItem[] = useMemo(() => (
-    workers.map((person) => ({ value: person.id || "", label: person.name }))
-  ), [workers]);
-
   // useEffect(() => {
   //   setProjectTimes([]);
   // }, []);
 
-  useEffect(() => {
-    if (schedulerData) {
-      schedulerData.setResources(createResources());
-      schedulerData.setEvents(createEvents());
-      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
-    }
-  }, [parentRef.current]);
+  // useEffect(() => {
+  //   if (schedulerData) {
+  //     schedulerData.setResources(createResources());
+  //     schedulerData.setEvents(createEvents());
+  //     dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+  //   }
+  // }, [parentRef.current]);
 
   const createResources = useCallback(() => {
     const resources: Resource[] = projects.map((project) => {
       const projectId = project.id!;
       const phaseResources: Resource[] = project.phaseIds?.map((phaseId) => ({
-        id: `${projectId}-${phaseId}`,
+        id: `${projectId}_${phaseId}`,
         name: phases.find(phase => phase.id === phaseId)?.name || '',
         parentId: projectId,
         groupOnly: false
@@ -88,19 +86,32 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   }, [projects, phases]);
 
   const createEvents = useCallback(() => {
-    const events: EventItem[] = projectTimes.map((projectTime) => {
+    const workerAllocations: EventItem[] = projectTimes.map((projectTime) => {
       return {
         id: projectTime.id,
         start: dayjs(projectTime.start).format("YYYY.MM.DD HH:mm:ss"),
         end: dayjs(projectTime.end).format("YYYY.MM.DD HH:mm:ss"),
         resourceId: projectTime.projectId,
         title: projectTime.title || "",
-        bgColor: projectTime.bgColor
+        bgColor: projectTime.bgColor,
       }
     });
 
-    return events;
-  }, [projectTimes]);
+    const projectAllocations: EventItem[] = projects.map((project) => {
+      return {
+        id: `Project-${project.id}`,
+        start: dayjs(project.start).format("YYYY.MM.DD HH:mm:ss"),
+        end: dayjs(project.end).format("YYYY.MM.DD HH:mm:ss"),
+        resourceId: project.id!,
+        title: project.name,
+        bgColor: "blue",
+        movable: false,
+        resizable: false,
+      }
+    });
+
+    return [...workerAllocations, ...projectAllocations];
+  }, [projectTimes, projects]);
 
   useEffect(() => {
     schedulerData = new SchedulerData(dayjs().format("YYYY.MM.DD"), ViewType.Month);
@@ -155,17 +166,17 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     schedulerData.setEvents(createEvents());
   }
 
-  const onNewEventAdd = (_schedulerData: SchedulerData<EventItem>, slotId: string, _slotName: string, start: string, end: string, _type: string, _item: EventItem) => {
+  const onNewEventAdd = (_schedulerData: SchedulerData<EventItem>, slotId: string, _slotName: string, start: string, end: string) => {
     setModalOpened(true);
-      const newEvent: ProjectTime = {
-        id: uuid(),
-        projectId: slotId,
-        title: "",
-        start,
-        end,
-        resourceId: slotId,
-        bgColor: "purple",
-      };
+    const newEvent: ProjectTime = {
+      id: uuid(),
+      projectId: slotId,
+      title: "",
+      start,
+      end,
+      resourceId: slotId.split("_")[0],
+      bgColor: "purple",
+    };
 
     setPendingProjectTime(newEvent);
   };
@@ -201,26 +212,44 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       if (!worker) return
       const { name, color } = worker;
       setProjectTimes((projectTimes) => [...projectTimes, {...pendingProjectTime, title: name, bgColor: color }]);
+
+      const { start, end } = pendingProjectTime;
+      const numberOfFullDays = dayjs(end).diff(dayjs(start), "days") + 1;
+      const project = projects.find(project => project.id === pendingProjectTime.resourceId);
+      if (project) {
+        const updatedProject = { ...project, allocatedHours: project.allocatedHours + numberOfFullDays * 8 };
+        setProjects((projects) => projects.map((project) => project.id === updatedProject.id ? updatedProject : project));
+      }
+
       setModalOpened(false);
       setPendingProjectTime(undefined);
     }
   };
 
-  const renderModalContent = () => (
-    <Stack>
-      <DataGroup
-        edit
-        column
-        title="Työntekijä"
-        inputType="select"
-        onChange={(value) => pendingProjectTime && setPendingProjectTime({ ...pendingProjectTime, workerId: value as string })}
-        selectProps={{
-          selectValue: pendingProjectTime?.workerId,
-          selectOptions: workerOptions
-        }}
-      />
-    </Stack>
-  );
+  const renderModalContent = () => {
+    const resourceId = pendingProjectTime?.resourceId;
+    if (!resourceId) return null;
+    const project = projects.find((project) => project.id === resourceId);
+    if (!project) return null;
+    const projectWorkers = project.workerIds?.map((workerId) => workers.find((worker) => worker.id === workerId)) || [];
+    const workerOptions: ComboboxItem[] = projectWorkers.filter(worker => !!worker).map((worker) => ({ value: worker.id || "", label: worker.name }));
+
+    return (
+      <Stack>
+        <DataGroup
+          edit
+          column
+          title="Työntekijä"
+          inputType="select"
+          onChange={(value) => pendingProjectTime && setPendingProjectTime({ ...pendingProjectTime, workerId: value as string })}
+          selectProps={{
+            selectValue: pendingProjectTime?.workerId,
+            selectOptions: workerOptions
+          }}
+        />
+      </Stack>
+    );
+  }
 
   const renderModal = (title: string) => {
     return (

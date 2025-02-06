@@ -31,9 +31,9 @@ const TopBar = () => {
             onChange={(value) => value && onTabChange(value)}
           >
             <Tabs.List h="100%">
-              <Tabs.Tab value={`/overview`}>Overview</Tabs.Tab>
-              <Tabs.Tab value={`/projects`}>Projects</Tabs.Tab>
-              <Tabs.Tab value={`/workers`}>Workers</Tabs.Tab>
+              <Tabs.Tab value={`/planner-poc/overview`}>Overview</Tabs.Tab>
+              <Tabs.Tab value={`/planner-poc/projects`}>Projects</Tabs.Tab>
+              <Tabs.Tab value={`/planner-poc/workers`}>Workers</Tabs.Tab>
             </Tabs.List>
           </Tabs>
         </Group>

@@ -4,12 +4,12 @@ import { useAtom, useSetAtom } from 'jotai'
 import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { v4 as uuid } from 'uuid'
-import { workersAtom } from '../atoms/workers'
-import DataGroup from '../components/generic/data-group'
-import { Worker } from '../types'
-import { projectsAtom } from '../atoms/projects'
+import { workersAtom } from '../../atoms/workers'
+import DataGroup from '../../components/generic/data-group'
+import { Worker } from '../../types'
+import { projectsAtom } from '../../atoms/projects'
 
-export const Route = createFileRoute('/workers')({
+export const Route = createFileRoute('/planner-poc/workers')({
   component: RouteComponent,
 })
 
@@ -83,7 +83,9 @@ function RouteComponent() {
         inputType="color"
         colorPickerProps={{
           colorValue: pendingWorker?.color,
-          onColorChange: (value) => pendingWorker && setPendingWorker({ ...pendingWorker, color: value })
+          onColorChange: (value) =>
+            pendingWorker &&
+            setPendingWorker({ ...pendingWorker, color: value }),
         }}
       />
     </Stack>

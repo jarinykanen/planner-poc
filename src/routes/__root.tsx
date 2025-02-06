@@ -5,7 +5,6 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 const RootLayout = () => {
-
   return (
     <DndProvider backend={HTML5Backend} key={Math.random()}>
       <AppShell
@@ -22,5 +21,5 @@ const RootLayout = () => {
 }
 
 export const Route = createRootRoute({
-  component: RootLayout,
+  component: RootLayout
 });

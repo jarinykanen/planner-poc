@@ -11,41 +11,34 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as WorkersImport } from './routes/workers'
-import { Route as ProjectsImport } from './routes/projects'
-import { Route as OverviewImport } from './routes/overview'
-import { Route as HomeImport } from './routes/home'
 import { Route as IndexImport } from './routes/index'
+import { Route as PlannerPocWorkersImport } from './routes/planner-poc/workers'
+import { Route as PlannerPocProjectsImport } from './routes/planner-poc/projects'
+import { Route as PlannerPocOverviewImport } from './routes/planner-poc/overview'
 
 // Create/Update Routes
-
-const WorkersRoute = WorkersImport.update({
-  id: '/workers',
-  path: '/workers',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const ProjectsRoute = ProjectsImport.update({
-  id: '/projects',
-  path: '/projects',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const OverviewRoute = OverviewImport.update({
-  id: '/overview',
-  path: '/overview',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const HomeRoute = HomeImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PlannerPocWorkersRoute = PlannerPocWorkersImport.update({
+  id: '/planner-poc/workers',
+  path: '/planner-poc/workers',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PlannerPocProjectsRoute = PlannerPocProjectsImport.update({
+  id: '/planner-poc/projects',
+  path: '/planner-poc/projects',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const PlannerPocOverviewRoute = PlannerPocOverviewImport.update({
+  id: '/planner-poc/overview',
+  path: '/planner-poc/overview',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -60,32 +53,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeImport
+    '/planner-poc/overview': {
+      id: '/planner-poc/overview'
+      path: '/planner-poc/overview'
+      fullPath: '/planner-poc/overview'
+      preLoaderRoute: typeof PlannerPocOverviewImport
       parentRoute: typeof rootRoute
     }
-    '/overview': {
-      id: '/overview'
-      path: '/overview'
-      fullPath: '/overview'
-      preLoaderRoute: typeof OverviewImport
+    '/planner-poc/projects': {
+      id: '/planner-poc/projects'
+      path: '/planner-poc/projects'
+      fullPath: '/planner-poc/projects'
+      preLoaderRoute: typeof PlannerPocProjectsImport
       parentRoute: typeof rootRoute
     }
-    '/projects': {
-      id: '/projects'
-      path: '/projects'
-      fullPath: '/projects'
-      preLoaderRoute: typeof ProjectsImport
-      parentRoute: typeof rootRoute
-    }
-    '/workers': {
-      id: '/workers'
-      path: '/workers'
-      fullPath: '/workers'
-      preLoaderRoute: typeof WorkersImport
+    '/planner-poc/workers': {
+      id: '/planner-poc/workers'
+      path: '/planner-poc/workers'
+      fullPath: '/planner-poc/workers'
+      preLoaderRoute: typeof PlannerPocWorkersImport
       parentRoute: typeof rootRoute
     }
   }
@@ -95,52 +81,60 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/home': typeof HomeRoute
-  '/overview': typeof OverviewRoute
-  '/projects': typeof ProjectsRoute
-  '/workers': typeof WorkersRoute
+  '/planner-poc/overview': typeof PlannerPocOverviewRoute
+  '/planner-poc/projects': typeof PlannerPocProjectsRoute
+  '/planner-poc/workers': typeof PlannerPocWorkersRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/home': typeof HomeRoute
-  '/overview': typeof OverviewRoute
-  '/projects': typeof ProjectsRoute
-  '/workers': typeof WorkersRoute
+  '/planner-poc/overview': typeof PlannerPocOverviewRoute
+  '/planner-poc/projects': typeof PlannerPocProjectsRoute
+  '/planner-poc/workers': typeof PlannerPocWorkersRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/home': typeof HomeRoute
-  '/overview': typeof OverviewRoute
-  '/projects': typeof ProjectsRoute
-  '/workers': typeof WorkersRoute
+  '/planner-poc/overview': typeof PlannerPocOverviewRoute
+  '/planner-poc/projects': typeof PlannerPocProjectsRoute
+  '/planner-poc/workers': typeof PlannerPocWorkersRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/home' | '/overview' | '/projects' | '/workers'
+  fullPaths:
+    | '/'
+    | '/planner-poc/overview'
+    | '/planner-poc/projects'
+    | '/planner-poc/workers'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/home' | '/overview' | '/projects' | '/workers'
-  id: '__root__' | '/' | '/home' | '/overview' | '/projects' | '/workers'
+  to:
+    | '/'
+    | '/planner-poc/overview'
+    | '/planner-poc/projects'
+    | '/planner-poc/workers'
+  id:
+    | '__root__'
+    | '/'
+    | '/planner-poc/overview'
+    | '/planner-poc/projects'
+    | '/planner-poc/workers'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  HomeRoute: typeof HomeRoute
-  OverviewRoute: typeof OverviewRoute
-  ProjectsRoute: typeof ProjectsRoute
-  WorkersRoute: typeof WorkersRoute
+  PlannerPocOverviewRoute: typeof PlannerPocOverviewRoute
+  PlannerPocProjectsRoute: typeof PlannerPocProjectsRoute
+  PlannerPocWorkersRoute: typeof PlannerPocWorkersRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  HomeRoute: HomeRoute,
-  OverviewRoute: OverviewRoute,
-  ProjectsRoute: ProjectsRoute,
-  WorkersRoute: WorkersRoute,
+  PlannerPocOverviewRoute: PlannerPocOverviewRoute,
+  PlannerPocProjectsRoute: PlannerPocProjectsRoute,
+  PlannerPocWorkersRoute: PlannerPocWorkersRoute,
 }
 
 export const routeTree = rootRoute
@@ -154,26 +148,22 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/home",
-        "/overview",
-        "/projects",
-        "/workers"
+        "/planner-poc/overview",
+        "/planner-poc/projects",
+        "/planner-poc/workers"
       ]
     },
     "/": {
       "filePath": "index.tsx"
     },
-    "/home": {
-      "filePath": "home.tsx"
+    "/planner-poc/overview": {
+      "filePath": "planner-poc/overview.tsx"
     },
-    "/overview": {
-      "filePath": "overview.tsx"
+    "/planner-poc/projects": {
+      "filePath": "planner-poc/projects.tsx"
     },
-    "/projects": {
-      "filePath": "projects.tsx"
-    },
-    "/workers": {
-      "filePath": "workers.tsx"
+    "/planner-poc/workers": {
+      "filePath": "planner-poc/workers.tsx"
     }
   }
 }

@@ -7,6 +7,8 @@ export interface Project {
   end: Date;
   workerIds: string[];
   phaseIds?: string[];
+  plannedTotalHours: number;
+  allocatedHours: number;
 };
 
 export interface Worker {

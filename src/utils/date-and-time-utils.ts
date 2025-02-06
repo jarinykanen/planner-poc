@@ -2,7 +2,13 @@
 import { DateTime } from "luxon";
 
 namespace DateAndTimeUtils {
-  export const formatToDisplayDate = (date?: Date) => (date && DateTime.fromJSDate(date).toFormat("dd.MM.yyyy")) || "";
+  export const formatToDisplayDate = (date?: Date | string) => {
+    if (!date || typeof date === "string") {
+      return date || "";
+    }
+
+    return DateTime.fromJSDate(date).toFormat("dd.MM.yyyy");
+  }
 
   export const formatToDisplayDateTime = (date?: Date | string) => {
     if (!date || typeof date === "string") {

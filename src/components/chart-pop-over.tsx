@@ -1,8 +1,9 @@
 import { Button, Group, Stack, Text, Title } from "@mantine/core";
 import dayjs from "dayjs";
-import { useSetAtom } from "jotai";
+import { useAtom } from "jotai";
 import { EventItem, Resource } from "react-big-schedule";
 import { projectTimesAtom } from "../atoms/project-times";
+import { projectsAtom } from "../atoms/projects";
 
 interface Props {
   event: EventItem;
@@ -14,10 +15,21 @@ interface Props {
 }
 
 const ChartPopOver = ({ event, title, start, end, resource }: Props) => {
-  const setProjectTimes = useSetAtom(projectTimesAtom);
+  const [projectTimes, setProjectTimes] = useAtom(projectTimesAtom);
+  const [projects, setProjects] = useAtom(projectsAtom);
 
   const onDeleteClick = () => {
+    const projectTimeToDelete = projectTimes.find((time) => time.id === event.id);
+    if (!projectTimeToDelete) return;
     setProjectTimes((times) => times.filter((time) => time.id !== event.id));
+
+    const { start, end } = projectTimeToDelete;
+    const numberOfFullDays = dayjs(end).diff(dayjs(start), "days") + 1;
+    const project = projects.find(project => project.id === projectTimeToDelete.resourceId);
+    if (project) {
+      const updatedProject = { ...project, allocatedHours: project.allocatedHours - numberOfFullDays * 8 };
+      setProjects((projects) => projects.map((project) => project.id === updatedProject.id ? updatedProject : project));
+    }
   };
 
   return (

@@ -12,7 +12,7 @@ import {
   Textarea,
   Tooltip,
 } from "@mantine/core";
-import { DateTimePicker, TimeInput } from "@mantine/dates";
+import { DateInput, DateTimePicker, TimeInput } from "@mantine/dates";
 import { CalendarClock } from "lucide-react";
 import DateAndTimeUtils from "../../utils/date-and-time-utils";
 
@@ -50,7 +50,7 @@ interface Props {
   placeholder?: string;
   unit?: string;
   edit?: boolean;
-  inputType?: "text" | "number" | "date" | "select" | "multiSelect" | "switch" | "textarea" | "time" | "color";
+  inputType?: "text" | "number" | "date" | "dateTime" | "select" | "multiSelect" | "switch" | "textarea" | "time" | "color";
   disabled?: boolean;
   tooltip?: string;
   onChange?: (value: string | number | Date | boolean) => void;
@@ -104,6 +104,18 @@ const DataGroup = ({
           />
         );
       case "date":
+        return (
+          <DateInput
+            value={dateProps?.dateValue}
+            onChange={(value) => onChange?.(value as Date)}
+            placeholder={placeholder}
+            style={{ height: 36, overflow: "hidden", width: "100%" }}
+            minDate={dateProps?.minDate}
+            maxDate={dateProps?.maxDate}
+            disabled={disabled}
+          />
+        );
+      case "dateTime":
         return (
           <DateTimePicker
             placeholder={placeholder}
@@ -195,11 +207,21 @@ const DataGroup = ({
     }
 
     if (dateProps?.dateValue) {
-      return (
-        <Text size={size} fw={700} style={{ whiteSpace: "nowrap", lineHeight: "36px" }}>
-          {DateAndTimeUtils.formatToDisplayDateTime(dateProps?.dateValue)}
-        </Text>
-      );
+      if (inputType === "date") {
+        return (
+          <Text size={size} fw={700} style={{ whiteSpace: "nowrap", lineHeight: "36px" }}>
+            {DateAndTimeUtils.formatToDisplayDate(dateProps?.dateValue)}
+          </Text>
+        );
+      }
+
+      if (inputType === "dateTime") {
+        return (
+          <Text size={size} fw={700} style={{ whiteSpace: "nowrap", lineHeight: "36px" }}>
+            {DateAndTimeUtils.formatToDisplayDateTime(dateProps?.dateValue)}
+          </Text>
+        );
+      }
     }
 
     if (selectValue) {
