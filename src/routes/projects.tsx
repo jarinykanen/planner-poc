@@ -2,7 +2,7 @@ import { Button, ComboboxItem, Group, Modal, Stack, Table, Title } from "@mantin
 import { createFileRoute } from "@tanstack/react-router";
 import { useAtom, useAtomValue } from "jotai";
 import { Plus, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { projectsAtom } from "../atoms/projects";
 import { workersAtom } from "../atoms/workers";

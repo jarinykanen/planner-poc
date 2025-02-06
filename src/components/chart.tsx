@@ -1,4 +1,4 @@
-import { Box, Button, ComboboxItem, Container, Group, Modal, ScrollArea, Skeleton, Stack, Title } from "@mantine/core";
+import { Box, Button, ComboboxItem, Container, Group, Modal, Skeleton, Stack, Title } from "@mantine/core";
 import dayjs from "dayjs";
 import dayjsLocale from "dayjs/locale/fi";
 import { useSetAtom } from "jotai";
@@ -18,6 +18,7 @@ const initialState = {
   viewModel: {},
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function reducer(state: any, action: { type: any; payload: any; }) {
   switch (action.type) {
     case 'INITIALIZE':
@@ -123,7 +124,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     }, 1000);
   }, [createEvents, createResources])
 
-  const onMoveEvent = (schedulerData: SchedulerData<EventItem>, event: EventItem, slotId: string, slotName: string, start: string, end: string) => {
+  const onMoveEvent = (_schedulerData: SchedulerData<EventItem>, event: EventItem, slotId: string, _slotName: string, start: string, end: string) => {
     const projectTime = projectTimes.find((projectTime) => projectTime.id === event.id);
     if (projectTime) {
       const updatedProjectTime = { ...projectTime, projectId: slotId, start, end };
@@ -131,13 +132,13 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     }
   };
 
-  const onPrevClick = (_: SchedulerData) => {
+  const onPrevClick = () => {
     schedulerData.prev();
     schedulerData.setEvents(createEvents());
     dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
   };
 
-  const onNextClick = (_: SchedulerData) => {
+  const onNextClick = () => {
     schedulerData.next();
     schedulerData.setEvents(createEvents());
     dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
@@ -154,7 +155,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     schedulerData.setEvents(createEvents());
   }
 
-  const onNewEventAdd = (schedulerData: SchedulerData<EventItem>, slotId: string, slotName: string, start: string, end: string, type: string, item: EventItem) => {
+  const onNewEventAdd = (_schedulerData: SchedulerData<EventItem>, slotId: string, _slotName: string, start: string, end: string, _type: string, _item: EventItem) => {
     setModalOpened(true);
       const newEvent: ProjectTime = {
         id: uuid(),
@@ -186,7 +187,6 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   };
 
   const onToggleExpand = (_: SchedulerData<EventItem>, slotId: string) => {
-    const found = schedulerData.getSlots().find((slot) => slot.id === slotId);
     schedulerData.toggleExpandStatus(slotId);
     schedulerData.setEvents(createEvents());
   };
