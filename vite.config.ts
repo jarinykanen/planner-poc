@@ -22,8 +22,7 @@ export default defineConfig(
         utils: "/src/utils",
       },
     },
-    define: {
-      global: 'window',
-    }
+    // Deploy to a GitHub Pages
+    base: "/planner-poc/"
   }
 );
