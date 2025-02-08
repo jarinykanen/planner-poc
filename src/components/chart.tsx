@@ -11,6 +11,7 @@ import { projectsAtom } from "../atoms/projects";
 import { Phase, Project, ProjectTime, Worker } from "../types";
 import ChartPopOver from "./chart-pop-over";
 import DataGroup from "./generic/data-group";
+import { calculateTotalHours } from "../utils/calculations";
 
 let schedulerData: SchedulerData;
 
@@ -93,7 +94,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
         end: dayjs(projectTime.end).format("YYYY.MM.DD HH:mm:ss"),
         resourceId: projectTime.projectId,
         title: projectTime.title || "",
-        bgColor: projectTime.bgColor,
+        bgColor: projectTime.bgColor
       }
     });
 
@@ -103,10 +104,10 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
         start: dayjs(project.start).format("YYYY.MM.DD HH:mm:ss"),
         end: dayjs(project.end).format("YYYY.MM.DD HH:mm:ss"),
         resourceId: project.id!,
-        title: project.name,
+        title: `${project.name} (${project.allocatedHours}/${project.plannedTotalHours}h)`,
         bgColor: "blue",
         movable: false,
-        resizable: false,
+        resizable: false
       }
     });
 
@@ -114,32 +115,46 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   }, [projectTimes, projects]);
 
   useEffect(() => {
-    schedulerData = new SchedulerData(dayjs().format("YYYY.MM.DD"), ViewType.Month);
-    schedulerData.config.dragAndDropEnabled = true;
-    schedulerData.config.responsiveByParent = true;
+    if (!mounted || !state.showScheduler) return;
+    const resources = createResources();
+    const events = createEvents();
+
+    schedulerData?.setResources(resources);
+    schedulerData?.setEvents(events);
+    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+  }, [mounted]);
+
+  useEffect(() => {
+    schedulerData = new SchedulerData(dayjs().format("YYYY.MM.DD"), ViewType.Month, false, false, {
+      besidesWidth: 20,
+      dragAndDropEnabled: true,
+      responsiveByParent: true,
+      dayResourceTableWidth: 300,
+      weekResourceTableWidth: 300,
+      monthResourceTableWidth: 300,
+      quarterResourceTableWidth: 300,
+      yearResourceTableWidth: 300,
+      schedulerContentHeight: window.innerHeight - 250,
+      crossResourceMove: true,
+      eventItemPopoverTrigger: "click"
+    });
     schedulerData.setSchedulerLocale(dayjsLocale);
-    schedulerData.setCalendarPopoverLocale("fi_FI");
-    schedulerData.config.dayResourceTableWidth = 300;
-    schedulerData.config.weekResourceTableWidth = 300;
-    schedulerData.config.monthResourceTableWidth = 300;
-    schedulerData.config.quarterResourceTableWidth = 300;
-    schedulerData.config.yearResourceTableWidth = 300;
-    schedulerData.config.schedulerContentHeight = 800;
-    schedulerData.config.schedulerMaxHeight = 800;
-    schedulerData.setResources(createResources());
-    schedulerData.setEvents(createEvents());
+
     dispatch({ type: 'INITIALIZE', payload: schedulerData });
 
     setTimeout(() => {
       setMounted(true);
     }, 1000);
-  }, [createEvents, createResources])
+  }, [])
 
-  const onMoveEvent = (_schedulerData: SchedulerData<EventItem>, event: EventItem, slotId: string, _slotName: string, start: string, end: string) => {
+  const onMoveEvent = (_schedulerData: SchedulerData<EventItem>, event: EventItem, slotId: string, slotName: string, start: string, end: string) => {
     const projectTime = projectTimes.find((projectTime) => projectTime.id === event.id);
     if (projectTime) {
       const updatedProjectTime = { ...projectTime, projectId: slotId, start, end };
       setProjectTimes((projectTimes) => projectTimes.map((projectTime) => projectTime.id === updatedProjectTime.id ? updatedProjectTime : projectTime));
+
+      schedulerData.moveEvent(event, slotId, slotName, start, end);
+      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
     }
   };
 
@@ -159,11 +174,13 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     schedulerData.setDate(date);
     schedulerData.setResources(createResources());
     schedulerData.setEvents(createEvents());
+    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
   };
 
   const onChangeViewType = (_: SchedulerData<EventItem>, view: View) => {
     schedulerData.setViewType(view.viewType);
     schedulerData.setEvents(createEvents());
+    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
   }
 
   const onNewEventAdd = (_schedulerData: SchedulerData<EventItem>, slotId: string, _slotName: string, start: string, end: string) => {
@@ -181,11 +198,33 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     setPendingProjectTime(newEvent);
   };
 
+  const updateProjectTotal = (projectId: string, workTimes: ProjectTime[]) => {
+    const project = projects.find(project => project.id === projectId);
+    if (project) {
+      const newTotal = calculateTotalHours(workTimes.filter(time => time.resourceId === project.id));
+      setProjects((projects) => projects.map((project) => project.id === projectId ? { ...project, allocatedHours: newTotal } : project));
+
+      const event = schedulerData.events.find((event) => event.resourceId === projectId);
+      if (!event) return;
+
+      schedulerData.updateEventEnd({
+        ...event,
+        title: `${project.name} (${newTotal}/${project.plannedTotalHours}h)`
+      }, event?.end || "");
+      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+    }
+  }
+
   const onUpdateEventStart = (_: SchedulerData<EventItem>, event: EventItem, newStart: string) => {
     const projectTime = projectTimes.find((projectTime) => projectTime.id === event.id);
     if (projectTime) {
       const updatedProjectTime = { ...projectTime, start: newStart };
-      setProjectTimes((projectTimes) => projectTimes.map((projectTime) => projectTime.id === updatedProjectTime.id ? updatedProjectTime : projectTime));
+      const newTimes = projectTimes.map((projectTime) => projectTime.id === updatedProjectTime.id ? updatedProjectTime : projectTime);
+      setProjectTimes(newTimes);
+      updateProjectTotal(updatedProjectTime.resourceId, newTimes);
+
+      schedulerData.updateEventStart(event, newStart);
+      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
     }
   }
 
@@ -193,13 +232,18 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     const projectTime = projectTimes.find((projectTime) => projectTime.id === event.id);
     if (projectTime) {
       const updatedProjectTime = { ...projectTime, end: newEnd };
-      setProjectTimes((projectTimes) => projectTimes.map((projectTime) => projectTime.id === updatedProjectTime.id ? updatedProjectTime : projectTime));
+      const newTimes = projectTimes.map((projectTime) => projectTime.id === updatedProjectTime.id ? updatedProjectTime : projectTime);
+      setProjectTimes(newTimes);
+      updateProjectTotal(updatedProjectTime.resourceId, newTimes);
+
+      schedulerData.updateEventEnd(event, newEnd);
+      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
     }
   };
 
   const onToggleExpand = (_: SchedulerData<EventItem>, slotId: string) => {
     schedulerData.toggleExpandStatus(slotId);
-    schedulerData.setEvents(createEvents());
+    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
   };
 
   const onCloseModal = () => {
@@ -211,19 +255,42 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       const worker = workers.find(worker => worker.id === pendingProjectTime.workerId);
       if (!worker) return
       const { name, color } = worker;
-      setProjectTimes((projectTimes) => [...projectTimes, {...pendingProjectTime, title: name, bgColor: color }]);
+      const newWorkTimes = [...projectTimes, {...pendingProjectTime, title: name, bgColor: color }];
+      setProjectTimes(newWorkTimes);
 
-      const { start, end } = pendingProjectTime;
-      const numberOfFullDays = dayjs(end).diff(dayjs(start), "days") + 1;
       const project = projects.find(project => project.id === pendingProjectTime.resourceId);
       if (project) {
-        const updatedProject = { ...project, allocatedHours: project.allocatedHours + numberOfFullDays * 8 };
+        const newTotal = calculateTotalHours(newWorkTimes.filter(time => time.resourceId === project.id));
+        const updatedProject = { ...project, allocatedHours: newTotal };
         setProjects((projects) => projects.map((project) => project.id === updatedProject.id ? updatedProject : project));
       }
 
       setModalOpened(false);
       setPendingProjectTime(undefined);
+
+      schedulerData.addEvent({
+        id: pendingProjectTime.id,
+        start: pendingProjectTime.start,
+        end: pendingProjectTime.end,
+        resourceId: pendingProjectTime.projectId,
+        title: name,
+        bgColor: color
+      });
+      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
     }
+  };
+
+  const onDeleteClick = (event: EventItem) => {
+    const projectTimeToDelete = projectTimes.find((time) => time.id === event.id);
+    if (!projectTimeToDelete) return;
+
+    const newProjectTimes = projectTimes.filter((time) => time.id !== projectTimeToDelete.id);
+    setProjectTimes(newProjectTimes);
+
+    updateProjectTotal(projectTimeToDelete.resourceId, newProjectTimes);
+
+    schedulerData.removeEvent(event);
+    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
   };
 
   const renderModalContent = () => {
@@ -280,12 +347,14 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
 
   const renderPopOver = (_: SchedulerData<EventItem>, event: EventItem, title: string, start: dayjs.Dayjs, end: dayjs.Dayjs, statusColor: string) => (
     <ChartPopOver
+      key={`popover-${event.id}`}
       event={event}
       title={title}
       start={start}
       end={end}
       statusColor={statusColor}
       resource={schedulerData.getSlots().find((slot) => slot.id === event.resourceId) as Resource}
+      onDeleteClick={onDeleteClick}
     />
   );
 

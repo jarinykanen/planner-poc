@@ -1,4 +1,5 @@
 import {
+  ActionIcon,
   Button,
   ComboboxItem,
   Group,
@@ -9,13 +10,15 @@ import {
 } from '@mantine/core'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAtom, useAtomValue } from 'jotai'
-import { Plus, X } from 'lucide-react'
+import { Plus, RefreshCcw, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { v4 as uuid } from 'uuid'
+import { projectTimesAtom } from '../../atoms/project-times'
 import { projectsAtom } from '../../atoms/projects'
 import { workersAtom } from '../../atoms/workers'
 import DataGroup from '../../components/generic/data-group'
 import { demoPhases, Project } from '../../types'
+import { calculateTotalHours } from '../../utils/calculations'
 import DateAndTimeUtils from '../../utils/date-and-time-utils'
 
 export const Route = createFileRoute('/planner-poc/projects')({
@@ -23,7 +26,8 @@ export const Route = createFileRoute('/planner-poc/projects')({
 })
 
 function RouteComponent() {
-  const [projects, setProjects] = useAtom(projectsAtom)
+  const [projects, setProjects] = useAtom(projectsAtom);
+  const projectTimes = useAtomValue(projectTimesAtom);
   const workers = useAtomValue(workersAtom)
 
   const [modalOpened, setModalOpened] = useState(false)
@@ -83,6 +87,20 @@ function RouteComponent() {
     }
     onCloseModal()
   }
+
+  const reCalculateHours = (projectId: string) => {
+    const workTimesForProject = projectTimes.filter(time => time.resourceId === projectId);
+
+    const timeTotal = calculateTotalHours(workTimesForProject);
+
+    setProjects(
+      projects.map(project =>
+        project.id === projectId
+          ? { ...project, allocatedHours: timeTotal }
+          : project
+      )
+    );
+  };
 
   const onEditClick = (project: Project) => {
     setModalOpened(true)
@@ -233,6 +251,9 @@ function RouteComponent() {
       <Table.Td>{project.allocatedHours}</Table.Td>
       <Table.Td>
         <Group>
+          <ActionIcon onClick={() => project.id && reCalculateHours(project.id)}>
+            <RefreshCcw size={18} />
+          </ActionIcon>
           <Button
             size="xs"
             variant="light"
