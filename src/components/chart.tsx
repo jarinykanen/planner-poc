@@ -5,15 +5,15 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { EventItem, Resource, Scheduler, SchedulerData, View, ViewType } from "react-big-schedule";
 import "react-big-schedule/dist/css/style.css";
-import '../styles/scheduler.css';
 import { v4 as uuid } from "uuid";
 import { projectTimesAtom } from "../atoms/project-times";
 import { projectsAtom } from "../atoms/projects";
+import { workspacesAtom } from "../atoms/workspaces";
+import '../styles/scheduler.css';
 import { Phase, Project, ProjectTime, Worker } from "../types";
+import { calculateTotalHours } from "../utils/calculations";
 import ChartPopOver from "./chart-pop-over";
 import DataGroup from "./generic/data-group";
-import { calculateTotalHours } from "../utils/calculations";
-import { workspacesAtom } from "../atoms/workspaces";
 
 let schedulerData: SchedulerData;
 
@@ -384,12 +384,6 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       onDeleteClick={onDeleteClick}
     />
   );
-
-  const styles = {
-    '.scheduler tbody': {
-      backgroundColor: '#1d1f25',
-    },
-  }
 
   const renderContent = () => {
     if (!schedulerData || !state.showScheduler || !parentRef.current || !mounted) return <Skeleton height={600} />;
