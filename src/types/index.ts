@@ -34,6 +34,7 @@ export interface ProductionLine {
 export interface Phase {
   id?: string;
   name: string;
+  index: number;
 }
 
 export interface Workspace {

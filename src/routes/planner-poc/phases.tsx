@@ -22,6 +22,7 @@ function RouteComponent() {
     setModalOpened(true)
     setPendingPhase({
       name: '',
+      index: phases.length + 1
     })
   }
 
@@ -31,17 +32,19 @@ function RouteComponent() {
   }
 
   const onSave = () => {
+    let newPhases: Phase[] = [];
+
     if (pendingPhase) {
       if (pendingPhase.id) {
-        setPhases(
-          phases.map((phase) =>
-            phase.id === pendingPhase.id ? pendingPhase : phase,
-          ),
+        newPhases = phases.map((phase) =>
+          phase.id === pendingPhase.id ? pendingPhase : phase,
         )
       } else {
-        setPhases([...phases, { ...pendingPhase, id: uuid() }])
+        newPhases = [...phases, { ...pendingPhase, id: uuid() }]
       }
     }
+
+    setPhases(rearrangeAllPhases(newPhases))
     onCloseModal()
   }
 
@@ -51,8 +54,13 @@ function RouteComponent() {
   }
 
   const onDeleteClick = (phase: Phase) => {
-    setPhases(phases.filter((w) => w.id !== phase.id))
+    setPhases(phases.filter((p) => p.id !== phase.id))
   }
+
+  const rearrangeAllPhases = (newPhases: Phase[]) => {
+    const sorted = newPhases.sort((a, b) => a.index - b.index);
+    return sorted.map((phase, index) => ({ ...phase, index: index + 1 }))
+  };
 
   const renderModalContent = () => (
     <Stack>
@@ -65,6 +73,17 @@ function RouteComponent() {
         onChange={(value) =>
           pendingPhase &&
           setPendingPhase({ ...pendingPhase, name: value as string })
+        }
+      />
+      <DataGroup
+        edit
+        column
+        title="Indeksi"
+        inputType="number"
+        value={pendingPhase?.index}
+        onChange={(value) =>
+          pendingPhase &&
+          setPendingPhase({ ...pendingPhase, index: Number(value) })
         }
       />
     </Stack>

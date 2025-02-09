@@ -4,6 +4,7 @@ import {
   ComboboxItem,
   Group,
   Modal,
+  ScrollArea,
   Stack,
   Table,
   Title,
@@ -68,6 +69,7 @@ function RouteComponent() {
       start: new Date(),
       end: new Date(),
       workerIds: [],
+      phaseIds: [],
       plannedTotalHours: 0,
       allocatedHours: 0,
       workspaceId: "not selected"
@@ -241,13 +243,14 @@ function RouteComponent() {
       zIndex={200}
       opened={modalOpened}
       onClose={onCloseModal}
-      size="lg"
+      size="100%"
       miw="80%"
       closeOnClickOutside={false}
       transitionProps={{ transition: 'fade', duration: 200 }}
       withCloseButton={false}
-    >
-      <Stack p={8}>
+      scrollAreaComponent={ScrollArea.Autosize}
+      >
+      <Stack p={8} style={{ overflow: "hidden" }}>
         <Title order={3}>Lisää projekti</Title>
         {renderModalContent()}
         <Group p={16}>
