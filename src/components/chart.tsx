@@ -91,7 +91,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
 
       projects.forEach((project) => {
         const projectId = project.id!;
-        const phaseResources: Resource[] = project.phaseIds?.map((phaseId) => ({
+        const phaseResources: Resource[] = project.phaseIds?.sort((a, b) => Number(a) - Number(b))?.map((phaseId) => ({
           id: `${projectId}_${phaseId}`,
           name: phases.find(phase => phase.id === phaseId)?.name || '',
           parentId: projectId,
