@@ -1,66 +1,59 @@
 import { Button, Group, Modal, Stack, Table, Title } from '@mantine/core'
 import { createFileRoute } from '@tanstack/react-router'
-import { useAtom, useSetAtom } from 'jotai'
+import { useAtom } from 'jotai'
 import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { v4 as uuid } from 'uuid'
-import { workersAtom } from '../../atoms/workers'
+import { workspacesAtom } from '../../atoms/workspaces'
 import DataGroup from '../../components/generic/data-group'
-import { Worker } from '../../types'
-import { projectsAtom } from '../../atoms/projects'
+import { Workspace } from '../../types'
 
-export const Route = createFileRoute('/planner-poc/workers')({
+export const Route = createFileRoute('/planner-poc/workspaces')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const [workers, setWorkers] = useAtom(workersAtom)
-  const setProjects = useSetAtom(projectsAtom)
+  const [workspaces, setWorkspaces] = useAtom(workspacesAtom)
 
   const [modalOpened, setModalOpened] = useState(false)
-  const [pendingWorker, setPendingWorker] = useState<Worker>()
+  const [pendingWorkspace, setPendingWorkspace] = useState<Workspace>();
+
+  console.log('workspaces', workspaces)
 
   const addNewClick = () => {
     setModalOpened(true)
-    setPendingWorker({
+    setPendingWorkspace({
       name: '',
-      color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
     })
   }
 
   const onCloseModal = () => {
     setModalOpened(false)
-    setPendingWorker(undefined)
+    setPendingWorkspace(undefined)
   }
 
   const onSave = () => {
-    if (pendingWorker) {
-      if (pendingWorker.id) {
-        setWorkers(
-          workers.map((worker) =>
-            worker.id === pendingWorker.id ? pendingWorker : worker,
+    if (pendingWorkspace) {
+      if (pendingWorkspace.id) {
+        setWorkspaces(
+          workspaces.map((workspace) =>
+            workspace.id === pendingWorkspace.id ? pendingWorkspace : workspace,
           ),
         )
       } else {
-        setWorkers([...workers, { ...pendingWorker, id: uuid() }])
+        setWorkspaces([...workspaces, { ...pendingWorkspace, id: uuid() }])
       }
     }
     onCloseModal()
   }
 
-  const onEditClick = (worker: Worker) => {
+  const onEditClick = (workspace: Workspace) => {
     setModalOpened(true)
-    setPendingWorker(worker)
+    setPendingWorkspace(workspace)
   }
 
-  const onDeleteClick = (worker: Worker) => {
-    setProjects((projects) =>
-      projects.map((project) => ({
-        ...project,
-        workerIds: project.workerIds.filter((id) => id !== worker.id),
-      })),
-    )
-    setWorkers(workers.filter((w) => w.id !== worker.id))
+  const onDeleteClick = (workspace: Workspace) => {
+    setWorkspaces(workspaces.filter((w) => w.id !== workspace.id))
   }
 
   const renderModalContent = () => (
@@ -70,23 +63,11 @@ function RouteComponent() {
         column
         title="Nimi"
         inputType="text"
-        value={pendingWorker?.name}
+        value={pendingWorkspace?.name}
         onChange={(value) =>
-          pendingWorker &&
-          setPendingWorker({ ...pendingWorker, name: value as string })
+          pendingWorkspace &&
+          setPendingWorkspace({ ...pendingWorkspace, name: value as string })
         }
-      />
-      <DataGroup
-        edit
-        column
-        title="Väri"
-        inputType="color"
-        colorPickerProps={{
-          colorValue: pendingWorker?.color,
-          onColorChange: (value) =>
-            pendingWorker &&
-            setPendingWorker({ ...pendingWorker, color: value }),
-        }}
       />
     </Stack>
   )
@@ -116,20 +97,19 @@ function RouteComponent() {
     </Modal>
   )
 
-  const renderRow = (worker: Worker) => (
-    <Table.Tr key={worker.name}>
-      <Table.Td>{worker.name}</Table.Td>
-      <Table.Td>{worker.color}</Table.Td>
+  const renderRow = (workspace: Workspace) => (
+    <Table.Tr key={workspace.name}>
+      <Table.Td>{workspace.name}</Table.Td>
       <Table.Td>
         <Group>
-          <Button size="xs" variant="light" onClick={() => onEditClick(worker)}>
+          <Button size="xs" variant="light" onClick={() => onEditClick(workspace)}>
             Muokkaa
           </Button>
           <Button
             size="xs"
             variant="filled"
             bg="red"
-            onClick={() => onDeleteClick(worker)}
+            onClick={() => onDeleteClick(workspace)}
           >
             Poista
           </Button>
@@ -146,7 +126,7 @@ function RouteComponent() {
             Lisää
           </Button>
           <Button
-            onClick={() => setWorkers([])}
+            onClick={() => setWorkspaces([])}
             leftSection={<X size={18} />}
             bg="red"
           >
@@ -157,11 +137,10 @@ function RouteComponent() {
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Nimi</Table.Th>
-              <Table.Th>Väri</Table.Th>
               <Table.Th>Toiminnot</Table.Th>
             </Table.Tr>
           </Table.Thead>
-          <Table.Tbody>{workers.map(renderRow)}</Table.Tbody>
+          <Table.Tbody>{workspaces.map(renderRow)}</Table.Tbody>
         </Table>
       </Stack>
       {renderModal()}

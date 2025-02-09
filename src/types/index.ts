@@ -9,6 +9,7 @@ export interface Project {
   phaseIds?: string[];
   plannedTotalHours: number;
   allocatedHours: number;
+  workspaceId: string;
 };
 
 export interface Worker {
@@ -32,6 +33,11 @@ export interface ProductionLine {
 
 export interface Phase {
   id: string;
+  name: string;
+}
+
+export interface Workspace {
+  id?: string;
   name: string;
 }
 

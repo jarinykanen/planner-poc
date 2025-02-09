@@ -20,6 +20,7 @@ import DataGroup from '../../components/generic/data-group'
 import { demoPhases, Project } from '../../types'
 import { calculateTotalHours } from '../../utils/calculations'
 import DateAndTimeUtils from '../../utils/date-and-time-utils'
+import { workspacesAtom } from '../../atoms/workspaces'
 
 export const Route = createFileRoute('/planner-poc/projects')({
   component: RouteComponent,
@@ -28,7 +29,8 @@ export const Route = createFileRoute('/planner-poc/projects')({
 function RouteComponent() {
   const [projects, setProjects] = useAtom(projectsAtom);
   const projectTimes = useAtomValue(projectTimesAtom);
-  const workers = useAtomValue(workersAtom)
+  const workers = useAtomValue(workersAtom);
+  const workspaces = useAtomValue(workspacesAtom);
 
   const [modalOpened, setModalOpened] = useState(false)
   const [pendingProject, setPendingProject] = useState<Project>()
@@ -42,6 +44,15 @@ function RouteComponent() {
   const phaseOptions: ComboboxItem[] = useMemo(
     () => demoPhases.map((phase) => ({ value: phase.id, label: phase.name })),
     [demoPhases],
+  );
+
+  const workspaceOptions: ComboboxItem[] = useMemo(
+    () =>
+      workspaces.map((workspace) => ({
+        value: workspace.id || '',
+        label: workspace.name,
+      })),
+    [workspaces],
   )
 
   // useEffect(() => {
@@ -57,6 +68,7 @@ function RouteComponent() {
       workerIds: [],
       plannedTotalHours: 0,
       allocatedHours: 0,
+      workspaceId: "not selected"
     })
   }
 
@@ -176,6 +188,17 @@ function RouteComponent() {
               setPendingProject({ ...pendingProject, phaseIds: value }),
           }}
         />
+        <DataGroup
+          edit
+          column
+          title="Projektin työtila"
+          inputType="select"
+          selectProps={{
+            selectOptions: workspaceOptions,
+            selectValue: pendingProject?.workspaceId
+          }}
+          onChange={(value) => pendingProject && setPendingProject({ ...pendingProject, workspaceId: value as string })}
+        />
         <Group>
           <DataGroup
             edit
@@ -247,6 +270,7 @@ function RouteComponent() {
         {DateAndTimeUtils.formatToDisplayDate(new Date(project.end))}
       </Table.Td>
       <Table.Td>{project.workerIds.length}</Table.Td>
+      <Table.Td>{workspaces.find(space => space.id === project.workspaceId)?.name}</Table.Td>
       <Table.Td>{project.plannedTotalHours}</Table.Td>
       <Table.Td>{project.allocatedHours}</Table.Td>
       <Table.Td>
@@ -298,6 +322,7 @@ function RouteComponent() {
               <Table.Th>Alkaa</Table.Th>
               <Table.Th>Loppuu</Table.Th>
               <Table.Th>Henkilöt</Table.Th>
+              <Table.Th>Työtila</Table.Th>
               <Table.Th>Arvioidut tunnit</Table.Th>
               <Table.Th>Allokoidut tunnit</Table.Th>
               <Table.Th>Toiminnot</Table.Th>

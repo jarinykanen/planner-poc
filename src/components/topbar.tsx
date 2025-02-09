@@ -34,6 +34,7 @@ const TopBar = () => {
               <Tabs.Tab value={`/planner-poc/overview`}>Overview</Tabs.Tab>
               <Tabs.Tab value={`/planner-poc/projects`}>Projects</Tabs.Tab>
               <Tabs.Tab value={`/planner-poc/workers`}>Workers</Tabs.Tab>
+              <Tabs.Tab value={`/planner-poc/workspaces`}>Workspaces</Tabs.Tab>
             </Tabs.List>
           </Tabs>
         </Group>

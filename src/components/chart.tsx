@@ -1,10 +1,11 @@
 import { Box, Button, ComboboxItem, Container, Group, Modal, Skeleton, Stack, Title } from "@mantine/core";
 import dayjs from "dayjs";
 import dayjsLocale from "dayjs/locale/fi";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { EventItem, Resource, Scheduler, SchedulerData, View, ViewType } from "react-big-schedule";
 import "react-big-schedule/dist/css/style.css";
+import '../styles/scheduler.css';
 import { v4 as uuid } from "uuid";
 import { projectTimesAtom } from "../atoms/project-times";
 import { projectsAtom } from "../atoms/projects";
@@ -12,6 +13,7 @@ import { Phase, Project, ProjectTime, Worker } from "../types";
 import ChartPopOver from "./chart-pop-over";
 import DataGroup from "./generic/data-group";
 import { calculateTotalHours } from "../utils/calculations";
+import { workspacesAtom } from "../atoms/workspaces";
 
 let schedulerData: SchedulerData;
 
@@ -42,6 +44,8 @@ interface Props {
 const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   const setProjectTimes = useSetAtom(projectTimesAtom);
   const setProjects = useSetAtom(projectsAtom);
+  const workspaces = useAtomValue(workspacesAtom);
+
   const [mounted, setMounted] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
   const [modalOpened, setModalOpened] = useState(false);
@@ -62,26 +66,49 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   // }, [parentRef.current]);
 
   const createResources = useCallback(() => {
-    const resources: Resource[] = projects.map((project) => {
-      const projectId = project.id!;
-      const phaseResources: Resource[] = project.phaseIds?.map((phaseId) => ({
-        id: `${projectId}_${phaseId}`,
-        name: phases.find(phase => phase.id === phaseId)?.name || '',
-        parentId: projectId,
-        groupOnly: false
-      })) || [];
+    const groupByWorkspace: Record<string, Project[]> = {};
 
-      const newResource: Resource = {
-        id: projectId,
-        name: project.name,
-        parentId: 'root'
+    projects.forEach((project) => {
+      const workspaceId = project.workspaceId || '';
+      if (!groupByWorkspace[workspaceId]) {
+        groupByWorkspace[workspaceId] = [];
+      }
+
+      groupByWorkspace[workspaceId].push(project);
+    });
+
+    const resources: Resource[] = [];
+
+    Object.entries(groupByWorkspace).map(([workspaceId, projects]) => {
+
+      const workspaceResource: Resource = {
+        id: workspaceId,
+        name: workspaces.find(workspace => workspace.id === workspaceId)?.name || '',
+        groupOnly: true
       };
 
-      return [newResource, ...phaseResources];
-    }).flat();
+      resources.push(workspaceResource);
+
+      projects.forEach((project) => {
+        const projectId = project.id!;
+        const phaseResources: Resource[] = project.phaseIds?.map((phaseId) => ({
+          id: `${projectId}_${phaseId}`,
+          name: phases.find(phase => phase.id === phaseId)?.name || '',
+          parentId: projectId,
+          groupOnly: false
+        })) || [];
+
+        const newResource: Resource = {
+          id: projectId,
+          name: project.name,
+          parentId: workspaceId,
+        };
+
+        resources.push(newResource, ...phaseResources)
+      });
+    });
 
     return [
-      { id: 'root', name: 'Projektit', groupOnly: true },
       ...resources,
     ];
   }, [projects, phases]);
@@ -358,6 +385,12 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     />
   );
 
+  const styles = {
+    '.scheduler tbody': {
+      backgroundColor: '#1d1f25',
+    },
+  }
+
   const renderContent = () => {
     if (!schedulerData || !state.showScheduler || !parentRef.current || !mounted) return <Skeleton height={600} />;
 
@@ -380,8 +413,8 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   }
 
   return (
-    <Container flex={1} maw="100%" mah="100%" style={{ overflow: "hidden" }}>
-      <Box ref={parentRef}>
+    <Container flex={1} maw="100%" mah="100%" style={{ overflow: "hidden", "scheduler-container tbody": { backgroundColor: "#1d1f25" } }}>
+      <Box ref={parentRef} id="scheduler-container">
         {renderContent()}
       </Box>
       {renderModal("Lisää työaika")}
