@@ -50,6 +50,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [modalOpened, setModalOpened] = useState(false);
   const [pendingProjectTime, setPendingProjectTime] = useState<ProjectTime>();
+  const [selectedWorkers, setSelectedWorkers] = useState<string[]>([]);
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -121,7 +122,8 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
         end: dayjs(projectTime.end).format("YYYY.MM.DD HH:mm:ss"),
         resourceId: projectTime.projectId,
         title: projectTime.title || "",
-        bgColor: projectTime.bgColor
+        bgColor: projectTime.bgColor,
+        groupId: projectTime.phaseId
       }
     });
 
@@ -134,7 +136,8 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
         title: `${project.name} (${project.allocatedHours}/${project.plannedTotalHours}h)`,
         bgColor: "blue",
         movable: false,
-        resizable: false
+        resizable: false,
+        groupOnly: true,
       }
     });
 
@@ -163,7 +166,8 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       yearResourceTableWidth: 300,
       schedulerContentHeight: window.innerHeight - 250,
       crossResourceMove: true,
-      eventItemPopoverTrigger: "click"
+      eventItemPopoverTrigger: "click",
+      groupOnlySlotColor: "#f0f0f0"
     });
     schedulerData.setSchedulerLocale(dayjsLocale);
 
@@ -211,6 +215,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   }
 
   const onNewEventAdd = (_schedulerData: SchedulerData<EventItem>, slotId: string, _slotName: string, start: string, end: string) => {
+    console.log(slotId)
     setModalOpened(true);
     const newEvent: ProjectTime = {
       id: uuid(),
@@ -279,10 +284,35 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
 
   const onConfirmProjectTime = () => {
     if (pendingProjectTime) {
-      const worker = workers.find(worker => worker.id === pendingProjectTime.workerId);
-      if (!worker) return
-      const { name, color } = worker;
-      const newWorkTimes = [...projectTimes, {...pendingProjectTime, title: name, bgColor: color }];
+
+      const workersSelectedForProjectTime = selectedWorkers.map(workerId => workers.find(worker => worker.id === workerId));
+
+      if (workersSelectedForProjectTime.length === 0) {
+        return;
+      }
+
+      const createdTimes: ProjectTime[] = [];
+
+      workersSelectedForProjectTime.forEach((worker) => {
+        if (worker) {
+          const { name, color } = worker;
+          const newTime = {...pendingProjectTime, id: uuid(), title: name, bgColor: color };
+          createdTimes.push(newTime);
+
+          schedulerData.addEvent({
+            id: uuid(),
+            start: pendingProjectTime.start,
+            end: pendingProjectTime.end,
+            resourceId: pendingProjectTime.projectId,
+            title: name,
+            bgColor: color,
+            groupId: "ASD"
+          });
+        }
+      });
+
+      const newWorkTimes = [...projectTimes, ...createdTimes];
+
       setProjectTimes(newWorkTimes);
 
       const project = projects.find(project => project.id === pendingProjectTime.resourceId);
@@ -294,15 +324,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
 
       setModalOpened(false);
       setPendingProjectTime(undefined);
-
-      schedulerData.addEvent({
-        id: pendingProjectTime.id,
-        start: pendingProjectTime.start,
-        end: pendingProjectTime.end,
-        resourceId: pendingProjectTime.projectId,
-        title: name,
-        bgColor: color
-      });
+      setSelectedWorkers([]);
       dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
     }
   };
@@ -334,11 +356,11 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
           edit
           column
           title="Työntekijä"
-          inputType="select"
-          onChange={(value) => pendingProjectTime && setPendingProjectTime({ ...pendingProjectTime, workerId: value as string })}
-          selectProps={{
-            selectValue: pendingProjectTime?.workerId,
-            selectOptions: workerOptions
+          inputType="multiSelect"
+          multiSelectProps={{
+            multiSelectOptions: workerOptions,
+            multiSelectValues: selectedWorkers,
+            onMultiSelectChange: (value) => setSelectedWorkers(value as string[])
           }}
         />
       </Stack>

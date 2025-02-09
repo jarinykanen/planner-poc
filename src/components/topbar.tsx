@@ -20,7 +20,7 @@ const TopBar = () => {
   };
 
   return (
-    <AppShell.Header>
+    <AppShell.Header bg="#1d1f25">
       <Group h="100%" justify="space-between" ml="md" mr="md">
         <Group justify="flex-end" h="100%">
           <Tabs
