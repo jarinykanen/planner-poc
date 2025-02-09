@@ -17,10 +17,11 @@ import { projectTimesAtom } from '../../atoms/project-times'
 import { projectsAtom } from '../../atoms/projects'
 import { workersAtom } from '../../atoms/workers'
 import DataGroup from '../../components/generic/data-group'
-import { demoPhases, Project } from '../../types'
+import { Project } from '../../types'
 import { calculateTotalHours } from '../../utils/calculations'
 import DateAndTimeUtils from '../../utils/date-and-time-utils'
 import { workspacesAtom } from '../../atoms/workspaces'
+import { phasesAtom } from '../../atoms/phases'
 
 export const Route = createFileRoute('/planner-poc/projects')({
   component: RouteComponent,
@@ -31,6 +32,7 @@ function RouteComponent() {
   const projectTimes = useAtomValue(projectTimesAtom);
   const workers = useAtomValue(workersAtom);
   const workspaces = useAtomValue(workspacesAtom);
+  const phases = useAtomValue(phasesAtom);
 
   const [modalOpened, setModalOpened] = useState(false)
   const [pendingProject, setPendingProject] = useState<Project>()
@@ -42,8 +44,8 @@ function RouteComponent() {
   )
 
   const phaseOptions: ComboboxItem[] = useMemo(
-    () => demoPhases.map((phase) => ({ value: phase.id, label: phase.name })),
-    [demoPhases],
+    () => phases.map((phase) => ({ value: phase.id || "", label: phase.name || "" })),
+    [phases],
   );
 
   const workspaceOptions: ComboboxItem[] = useMemo(

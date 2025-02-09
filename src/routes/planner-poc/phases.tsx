@@ -4,54 +4,54 @@ import { useAtom } from 'jotai'
 import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { v4 as uuid } from 'uuid'
-import { workspacesAtom } from '../../atoms/workspaces'
 import DataGroup from '../../components/generic/data-group'
-import { Workspace } from '../../types'
+import { Phase } from '../../types'
+import { phasesAtom } from '../../atoms/phases'
 
-export const Route = createFileRoute('/planner-poc/workspaces')({
+export const Route = createFileRoute('/planner-poc/phases')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const [workspaces, setWorkspaces] = useAtom(workspacesAtom)
+  const [phases, setPhases] = useAtom(phasesAtom)
 
   const [modalOpened, setModalOpened] = useState(false)
-  const [pendingWorkspace, setPendingWorkspace] = useState<Workspace>();
+  const [pendingPhase, setPendingPhase] = useState<Phase>()
 
   const addNewClick = () => {
     setModalOpened(true)
-    setPendingWorkspace({
+    setPendingPhase({
       name: '',
     })
   }
 
   const onCloseModal = () => {
     setModalOpened(false)
-    setPendingWorkspace(undefined)
+    setPendingPhase(undefined)
   }
 
   const onSave = () => {
-    if (pendingWorkspace) {
-      if (pendingWorkspace.id) {
-        setWorkspaces(
-          workspaces.map((workspace) =>
-            workspace.id === pendingWorkspace.id ? pendingWorkspace : workspace,
+    if (pendingPhase) {
+      if (pendingPhase.id) {
+        setPhases(
+          phases.map((phase) =>
+            phase.id === pendingPhase.id ? pendingPhase : phase,
           ),
         )
       } else {
-        setWorkspaces([...workspaces, { ...pendingWorkspace, id: uuid() }])
+        setPhases([...phases, { ...pendingPhase, id: uuid() }])
       }
     }
     onCloseModal()
   }
 
-  const onEditClick = (workspace: Workspace) => {
+  const onEditClick = (phase: Phase) => {
     setModalOpened(true)
-    setPendingWorkspace(workspace)
+    setPendingPhase(phase)
   }
 
-  const onDeleteClick = (workspace: Workspace) => {
-    setWorkspaces(workspaces.filter((w) => w.id !== workspace.id))
+  const onDeleteClick = (phase: Phase) => {
+    setPhases(phases.filter((w) => w.id !== phase.id))
   }
 
   const renderModalContent = () => (
@@ -61,10 +61,10 @@ function RouteComponent() {
         column
         title="Nimi"
         inputType="text"
-        value={pendingWorkspace?.name}
+        value={pendingPhase?.name}
         onChange={(value) =>
-          pendingWorkspace &&
-          setPendingWorkspace({ ...pendingWorkspace, name: value as string })
+          pendingPhase &&
+          setPendingPhase({ ...pendingPhase, name: value as string })
         }
       />
     </Stack>
@@ -81,7 +81,7 @@ function RouteComponent() {
       withCloseButton={false}
     >
       <Stack p={8}>
-        <Title order={3}>Lisää työtila</Title>
+        <Title order={3}>Lisää työvaihe</Title>
         {renderModalContent()}
         <Group p={16}>
           <Button onClick={onCloseModal} variant="light">
@@ -95,19 +95,23 @@ function RouteComponent() {
     </Modal>
   )
 
-  const renderRow = (workspace: Workspace) => (
-    <Table.Tr key={workspace.name}>
-      <Table.Td>{workspace.name}</Table.Td>
+  const renderRow = (phase: Phase) => (
+    <Table.Tr key={phase.name}>
+      <Table.Td>{phase.name}</Table.Td>
       <Table.Td>
         <Group>
-          <Button size="xs" variant="light" onClick={() => onEditClick(workspace)}>
+          <Button
+            size="xs"
+            variant="light"
+            onClick={() => onEditClick(phase)}
+          >
             Muokkaa
           </Button>
           <Button
             size="xs"
             variant="filled"
             bg="red"
-            onClick={() => onDeleteClick(workspace)}
+            onClick={() => onDeleteClick(phase)}
           >
             Poista
           </Button>
@@ -124,7 +128,7 @@ function RouteComponent() {
             Lisää
           </Button>
           <Button
-            onClick={() => setWorkspaces([])}
+            onClick={() => setPhases([])}
             leftSection={<X size={18} />}
             bg="red"
           >
@@ -138,7 +142,7 @@ function RouteComponent() {
               <Table.Th>Toiminnot</Table.Th>
             </Table.Tr>
           </Table.Thead>
-          <Table.Tbody>{workspaces.map(renderRow)}</Table.Tbody>
+          <Table.Tbody>{phases.map(renderRow)}</Table.Tbody>
         </Table>
       </Stack>
       {renderModal()}

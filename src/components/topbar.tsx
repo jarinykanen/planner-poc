@@ -31,10 +31,11 @@ const TopBar = () => {
             onChange={(value) => value && onTabChange(value)}
           >
             <Tabs.List h="100%">
-              <Tabs.Tab value={`/planner-poc/overview`}>Overview</Tabs.Tab>
-              <Tabs.Tab value={`/planner-poc/projects`}>Projects</Tabs.Tab>
-              <Tabs.Tab value={`/planner-poc/workers`}>Workers</Tabs.Tab>
-              <Tabs.Tab value={`/planner-poc/workspaces`}>Workspaces</Tabs.Tab>
+              <Tabs.Tab value={`/planner-poc/overview`}>Yleiskatsaus</Tabs.Tab>
+              <Tabs.Tab value={`/planner-poc/projects`}>Projekti</Tabs.Tab>
+              <Tabs.Tab value={`/planner-poc/workers`}>Työntekijät</Tabs.Tab>
+              <Tabs.Tab value={`/planner-poc/workspaces`}>Työtilat</Tabs.Tab>
+              <Tabs.Tab value={`/planner-poc/phases`}>Työvaiheet</Tabs.Tab>
             </Tabs.List>
           </Tabs>
         </Group>
