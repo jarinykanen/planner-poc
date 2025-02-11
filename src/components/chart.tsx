@@ -261,7 +261,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
   }
 
-  const onNewEventAdd = (_schedulerData: SchedulerData<EventItem>, slotId: string, slotName: string, start: string, end: string) => {
+  const onNewEventAdd = (_schedulerData: SchedulerData<EventItem>, slotId: string, _slotName: string, start: string, end: string) => {
     setModalOpened(true);
     const newEvent: ProjectTime = {
       id: uuid(),
