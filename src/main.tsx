@@ -125,9 +125,6 @@ const theme = createTheme({
           padding: 0,
           overFlow: "hidden",
         },
-        inner: {
-          paddingTop: 200,
-        },
       },
     },
   },

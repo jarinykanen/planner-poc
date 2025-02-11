@@ -269,7 +269,7 @@ const DataGroup = ({
         justifyContent: column ? "flex-start" : "space-between",
         alignContent: column ? "flex-start" : "center",
         alignItems: column ? "flex-start" : "center",
-        backgroundColor: edit ? "#EBF1FF" : "white",
+        backgroundColor: edit ? "#fff3e3" : "white",
         overflow: "hidden",
       }}
       gap={column ? 0 : 8}

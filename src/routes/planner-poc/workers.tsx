@@ -100,9 +100,10 @@ function RouteComponent() {
       closeOnClickOutside
       transitionProps={{ transition: 'fade', duration: 200 }}
       withCloseButton={false}
+      centered
     >
       <Stack p={8}>
-        <Title order={3}>Lisää projekti</Title>
+        <Title order={3}>Lisää työntekijä</Title>
         {renderModalContent()}
         <Group p={16}>
           <Button onClick={onCloseModal} variant="light">

@@ -1,15 +1,15 @@
 import { Box, Button, ComboboxItem, Container, Group, Modal, Skeleton, Stack, Title } from "@mantine/core";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import dayjsLocale from "dayjs/locale/fi";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { EventItem, Resource, Scheduler, SchedulerData, View, ViewType } from "react-big-schedule";
+import { CellUnit, DATE_FORMAT, EventItem, Resource, Scheduler, SchedulerData, View, ViewType } from "react-big-schedule";
 import "react-big-schedule/dist/css/style.css";
 import { v4 as uuid } from "uuid";
 import { projectTimesAtom } from "../atoms/project-times";
 import { projectsAtom } from "../atoms/projects";
 import { workspacesAtom } from "../atoms/workspaces";
-import '../styles/scheduler.css';
+import "../styles/scheduler.css";
 import { Phase, Project, ProjectTime, Worker } from "../types";
 import { calculateTotalHours } from "../utils/calculations";
 import ChartPopOver from "./chart-pop-over";
@@ -25,9 +25,9 @@ const initialState = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function reducer(state: any, action: { type: any; payload: any; }) {
   switch (action.type) {
-    case 'INITIALIZE':
+    case "INITIALIZE":
       return { showScheduler: true, viewModel: action.payload };
-    case 'UPDATE_SCHEDULER':
+    case "UPDATE_SCHEDULER":
       return { ...state, viewModel: action.payload };
     default:
       return state;
@@ -62,7 +62,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
   //   if (schedulerData) {
   //     schedulerData.setResources(createResources());
   //     schedulerData.setEvents(createEvents());
-  //     dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+  //     dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
   //   }
   // }, [parentRef.current]);
 
@@ -70,7 +70,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     const groupByWorkspace: Record<string, Project[]> = {};
 
     projects.forEach((project) => {
-      const workspaceId = project.workspaceId || '';
+      const workspaceId = project.workspaceId || "";
       if (!groupByWorkspace[workspaceId]) {
         groupByWorkspace[workspaceId] = [];
       }
@@ -84,7 +84,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
 
       const workspaceResource: Resource = {
         id: workspaceId,
-        name: workspaces.find(workspace => workspace.id === workspaceId)?.name || '',
+        name: workspaces.find(workspace => workspace.id === workspaceId)?.name || "",
         groupOnly: true
       };
 
@@ -94,7 +94,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
         const projectId = project.id!;
         const phaseResources: Resource[] = project.phaseIds?.sort((a, b) => Number(a) - Number(b))?.map((phaseId) => ({
           id: `${projectId}_${phaseId}`,
-          name: phases.find(phase => phase.id === phaseId)?.name || '',
+          name: phases.find(phase => phase.id === phaseId)?.name || "",
           parentId: projectId,
           groupOnly: false
         })) || [];
@@ -151,7 +151,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
 
     schedulerData?.setResources(resources);
     schedulerData?.setEvents(events);
-    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+    dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
   }, [mounted]);
 
   useEffect(() => {
@@ -167,16 +167,62 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       schedulerContentHeight: window.innerHeight - 250,
       crossResourceMove: true,
       eventItemPopoverTrigger: "click",
-      groupOnlySlotColor: "#f0f0f0"
+      groupOnlySlotColor: "#f0f0f0",
+      views: [
+        {viewName: "One day", viewType: ViewType.Day, showAgenda: false, isEventPerspective: false},
+        {viewName: "Two days", viewType: ViewType.Custom, showAgenda: false, isEventPerspective: false},
+        {viewName: "Week", viewType: ViewType.Week, showAgenda: false, isEventPerspective: false},
+        {viewName: "Month", viewType: ViewType.Month, showAgenda: false, isEventPerspective: false},
+        {viewName: "Quarter", viewType: ViewType.Quarter, showAgenda: false, isEventPerspective: false},
+        {viewName: "Year", viewType: ViewType.Year, showAgenda: false, isEventPerspective: false},
+      ],
+    }, {
+      getCustomDateFunc: getCustomDate
     });
     schedulerData.setSchedulerLocale(dayjsLocale);
 
-    dispatch({ type: 'INITIALIZE', payload: schedulerData });
+    dispatch({ type: "INITIALIZE", payload: schedulerData });
 
     setTimeout(() => {
       setMounted(true);
     }, 1000);
   }, [])
+
+  const getCustomDate = (schedulerData: SchedulerData<EventItem>, num: number, date?: string | Dayjs) => {
+    const { viewType, localeDayjs, startDate } = schedulerData;
+    const selectDate = date ?? startDate;
+    let startDateFormatted: string | Dayjs, endDateFormatted: string | Dayjs, cellUnit = CellUnit.Hour;
+
+    const baseDate = localeDayjs(selectDate);
+
+    switch (viewType) {
+      case ViewType.Custom1: {
+        const monday = baseDate.startOf("week");
+        startDateFormatted = num === 0 ? monday : monday.add(2 * num, "weeks");
+        endDateFormatted = startDateFormatted.add(1, "weeks").endOf("week");
+        cellUnit = CellUnit.Day;
+        break;
+      }
+      case ViewType.Custom2: {
+        const firstDayOfMonth = baseDate.startOf("month");
+        startDateFormatted = num === 0 ? firstDayOfMonth : firstDayOfMonth.add(2 * num, "months");
+        endDateFormatted = startDateFormatted.add(1, "months").endOf("month");
+        cellUnit = CellUnit.Day;
+        break;
+      }
+      default: {
+        startDateFormatted = num === 0 ? baseDate : baseDate.add(2 * num, "days");
+        endDateFormatted = startDateFormatted.add(1, "days");
+        break;
+      }
+    }
+
+    return {
+      startDate: startDateFormatted.format(DATE_FORMAT),
+      endDate: endDateFormatted.format(DATE_FORMAT),
+      cellUnit,
+    };
+  };
 
   const onMoveEvent = (_schedulerData: SchedulerData<EventItem>, event: EventItem, slotId: string, slotName: string, start: string, end: string) => {
     const projectTime = projectTimes.find((projectTime) => projectTime.id === event.id);
@@ -185,37 +231,37 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       setProjectTimes((projectTimes) => projectTimes.map((projectTime) => projectTime.id === updatedProjectTime.id ? updatedProjectTime : projectTime));
 
       schedulerData.moveEvent(event, slotId, slotName, start, end);
-      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+      dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
     }
   };
 
   const onPrevClick = () => {
     schedulerData.prev();
     schedulerData.setEvents(createEvents());
-    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+    dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
   };
 
   const onNextClick = () => {
     schedulerData.next();
     schedulerData.setEvents(createEvents());
-    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+    dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
   };
 
   const onSelectDate = (_: SchedulerData<EventItem>, date: string) => {
     schedulerData.setDate(date);
     schedulerData.setResources(createResources());
     schedulerData.setEvents(createEvents());
-    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+    dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
   };
 
   const onChangeViewType = (_: SchedulerData<EventItem>, view: View) => {
     schedulerData.setViewType(view.viewType);
     schedulerData.setEvents(createEvents());
-    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+    schedulerData.config.customCellWidth = view.viewType === ViewType.Custom ? 30 : 80;
+    dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
   }
 
-  const onNewEventAdd = (_schedulerData: SchedulerData<EventItem>, slotId: string, _slotName: string, start: string, end: string) => {
-    console.log(slotId)
+  const onNewEventAdd = (_schedulerData: SchedulerData<EventItem>, slotId: string, slotName: string, start: string, end: string) => {
     setModalOpened(true);
     const newEvent: ProjectTime = {
       id: uuid(),
@@ -243,7 +289,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
         ...event,
         title: `${project.name} (${newTotal}/${project.plannedTotalHours}h)`
       }, event?.end || "");
-      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+      dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
     }
   }
 
@@ -256,7 +302,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       updateProjectTotal(updatedProjectTime.resourceId, newTimes);
 
       schedulerData.updateEventStart(event, newStart);
-      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+      dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
     }
   }
 
@@ -269,13 +315,13 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       updateProjectTotal(updatedProjectTime.resourceId, newTimes);
 
       schedulerData.updateEventEnd(event, newEnd);
-      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+      dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
     }
   };
 
   const onToggleExpand = (_: SchedulerData<EventItem>, slotId: string) => {
     schedulerData.toggleExpandStatus(slotId);
-    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+    dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
   };
 
   const onCloseModal = () => {
@@ -305,8 +351,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
             end: pendingProjectTime.end,
             resourceId: pendingProjectTime.projectId,
             title: name,
-            bgColor: color,
-            groupId: "ASD"
+            bgColor: color
           });
         }
       });
@@ -325,7 +370,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       setModalOpened(false);
       setPendingProjectTime(undefined);
       setSelectedWorkers([]);
-      dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+      dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
     }
   };
 
@@ -339,7 +384,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     updateProjectTotal(projectTimeToDelete.resourceId, newProjectTimes);
 
     schedulerData.removeEvent(event);
-    dispatch({ type: 'UPDATE_SCHEDULER', payload: schedulerData });
+    dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
   };
 
   const renderModalContent = () => {
@@ -362,6 +407,26 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
             multiSelectValues: selectedWorkers,
             onMultiSelectChange: (value) => setSelectedWorkers(value as string[])
           }}
+        />
+        <DataGroup
+          edit
+          column
+          title="Alkaa"
+          inputType="dateTime"
+          dateProps={{
+            dateValue: new Date(pendingProjectTime?.start || ""),
+          }}
+          onChange={(value) => setPendingProjectTime({ ...pendingProjectTime, start: value as string })}
+        />
+        <DataGroup
+          edit
+          column
+          title="Loppuu"
+          inputType="dateTime"
+          dateProps={{
+            dateValue: new Date(pendingProjectTime?.end || ""),
+          }}
+          onChange={(value) => setPendingProjectTime({ ...pendingProjectTime, end: value as string })}
         />
       </Stack>
     );
@@ -407,6 +472,33 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     />
   );
 
+  const renderItem = (
+    schedulerData: SchedulerData<EventItem>,
+    event: EventItem,
+    bgColor: string,
+    isStart: boolean,
+    _isEnd: boolean,
+    mustAddCssClass: string,
+    mustBeHeight: number
+  ) => {
+    const borderWidth = isStart ? '2' : '1';
+    const borderColor =  'black', backgroundColor = bgColor;;
+    const titleText = schedulerData.behaviors.getEventTextFunc?.(schedulerData, event);
+    const divStyle = {
+      borderLeft: borderWidth + 'px solid ' + borderColor,
+      backgroundColor: backgroundColor,
+      height: mustBeHeight
+    };
+
+    return (
+      <div key={event.id} className={mustAddCssClass} style={divStyle}>
+        <span style={{marginLeft: '4px', lineHeight: `${mustBeHeight}px` }}>
+          {titleText}
+        </span>
+      </div>
+    );
+  };
+
   const renderContent = () => {
     if (!schedulerData || !state.showScheduler || !parentRef.current || !mounted) return <Skeleton height={600} />;
 
@@ -424,6 +516,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
         updateEventStart={onUpdateEventStart}
         toggleExpandFunc={onToggleExpand}
         eventItemPopoverTemplateResolver={renderPopOver}
+        eventItemTemplateResolver={renderItem}
       />
     );
   }

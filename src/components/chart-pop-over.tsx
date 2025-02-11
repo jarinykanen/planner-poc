@@ -18,8 +18,8 @@ const ChartPopOver = ({ event, title, start, end, resource, onDeleteClick }: Pro
       <Title order={2}>{title}</Title>
       <Text>{resource?.name}</Text>
       <Group>
-        <Text>Alkaa: {start.format("DD.MM.YYYY")}</Text>
-        <Text>Päättyy: {end.format("DD.MM.YYYY")}</Text>
+        <Text>Alkaa: {start.format("DD.MM.YYYY HH:mm")}</Text>
+        <Text>Päättyy: {end.format("DD.MM.YYYY HH:mm")}</Text>
       </Group>
       <Group>
         <Button
