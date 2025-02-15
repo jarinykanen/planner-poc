@@ -103,6 +103,7 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
           id: projectId,
           name: project.name,
           parentId: workspaceId,
+          groupOnly: true
         };
 
         resources.push(newResource, ...phaseResources)
@@ -338,21 +339,54 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       }
 
       const createdTimes: ProjectTime[] = [];
+      const currentViewType = schedulerData.viewType;
 
       workersSelectedForProjectTime.forEach((worker) => {
         if (worker) {
           const { name, color } = worker;
-          const newTime = {...pendingProjectTime, id: uuid(), title: name, bgColor: color };
-          createdTimes.push(newTime);
 
-          schedulerData.addEvent({
-            id: uuid(),
-            start: pendingProjectTime.start,
-            end: pendingProjectTime.end,
-            resourceId: pendingProjectTime.projectId,
-            title: name,
-            bgColor: color
-          });
+          if (currentViewType !== ViewType.Day && currentViewType !== ViewType.Custom) {
+            // If the view is not day or custom, we need to create a new event for each day
+            const startDate = dayjs(pendingProjectTime.start);
+            const endDate = dayjs(pendingProjectTime.end);
+
+            const days = endDate.diff(startDate, "days") + 1;
+            for (let i = 0; i < days; i++) {
+              // Each day should be 8h in length from 8am to 4pm
+              const startTime = startDate.add(i, "days").startOf("day").add(8, "hours");
+              const endTime = startDate.add(i, "days").startOf("day").add(16, "hours");
+              const newTime = {
+                ...pendingProjectTime,
+                id: uuid(),
+                title: name,
+                start: startTime.format("YYYY.MM.DD HH:mm:ss"),
+                end: endTime.format("YYYY.MM.DD HH:mm:ss"),
+                bgColor: color
+              }
+              createdTimes.push(newTime);
+
+              schedulerData.addEvent({
+                id: uuid(),
+                start: newTime.start,
+                end: newTime.end,
+                resourceId: newTime.projectId,
+                title: name,
+                bgColor: color
+              });
+            }
+          } else {
+            const newTime = {...pendingProjectTime, id: uuid(), title: name, bgColor: color };
+            createdTimes.push(newTime);
+
+            schedulerData.addEvent({
+              id: uuid(),
+              start: pendingProjectTime.start,
+              end: pendingProjectTime.end,
+              resourceId: pendingProjectTime.projectId,
+              title: name,
+              bgColor: color
+            });
+          }
         }
       });
 
@@ -387,6 +421,42 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     dispatch({ type: "UPDATE_SCHEDULER", payload: schedulerData });
   };
 
+  const renderTimeInputs = (projectTime: ProjectTime) => {
+    const { start, end } = projectTime;
+
+    const minDate = dayjs(start).startOf("day").toDate();
+    const maxDate = dayjs(end).endOf("day").toDate();
+
+    return (
+      <>
+        <DataGroup
+          edit
+          column
+          title="Alkaa"
+          inputType="dateTime"
+          dateProps={{
+            dateValue: new Date(start),
+            minDate: minDate,
+            maxDate: maxDate
+          }}
+          onChange={(value) => setPendingProjectTime({ ...projectTime, start: value as string })}
+        />
+        <DataGroup
+          edit
+          column
+          title="Loppuu"
+          inputType="dateTime"
+          dateProps={{
+            dateValue: new Date(end),
+            minDate: minDate,
+            maxDate: maxDate
+          }}
+          onChange={(value) => setPendingProjectTime({ ...projectTime, end: value as string })}
+        />
+      </>
+    );
+  };
+
   const renderModalContent = () => {
     const resourceId = pendingProjectTime?.resourceId;
     if (!resourceId) return null;
@@ -394,6 +464,8 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
     if (!project) return null;
     const projectWorkers = project.workerIds?.map((workerId) => workers.find((worker) => worker.id === workerId)) || [];
     const workerOptions: ComboboxItem[] = projectWorkers.filter(worker => !!worker).map((worker) => ({ value: worker.id || "", label: worker.name }));
+
+    const shouldShowTimeInputs = schedulerData.viewType === ViewType.Day || schedulerData.viewType === ViewType.Custom;
 
     return (
       <Stack>
@@ -408,31 +480,16 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
             onMultiSelectChange: (value) => setSelectedWorkers(value as string[])
           }}
         />
-        <DataGroup
-          edit
-          column
-          title="Alkaa"
-          inputType="dateTime"
-          dateProps={{
-            dateValue: new Date(pendingProjectTime?.start || ""),
-          }}
-          onChange={(value) => setPendingProjectTime({ ...pendingProjectTime, start: value as string })}
-        />
-        <DataGroup
-          edit
-          column
-          title="Loppuu"
-          inputType="dateTime"
-          dateProps={{
-            dateValue: new Date(pendingProjectTime?.end || ""),
-          }}
-          onChange={(value) => setPendingProjectTime({ ...pendingProjectTime, end: value as string })}
-        />
+        {shouldShowTimeInputs && (
+          renderTimeInputs(pendingProjectTime!)
+        )}
       </Stack>
     );
   }
 
   const renderModal = (title: string) => {
+    const shouldShowTimeInputs = schedulerData?.viewType === ViewType.Day || schedulerData?.viewType === ViewType.Custom;
+
     return (
       <Modal
         zIndex={200}
@@ -445,6 +502,11 @@ const ChartView = ({projects, workers, projectTimes, phases}: Props) => {
       >
         <Stack p={8}>
           <Title order={3}>{title}</Title>
+          {!shouldShowTimeInputs && (
+            <Title order={6} style={{ color: "red" }}>
+              Uudet allokaatiot luodaan automaattisesti klo 8:00 - 16:00 välille valitulle päivälle!
+            </Title>
+          )}
           {renderModalContent()}
           <Group p={16}>
             <Button onClick={onCloseModal} variant="light">
